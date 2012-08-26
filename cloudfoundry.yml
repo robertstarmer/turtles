@@ -1,0 +1,231 @@
+--- 
+name: cloudfoundry
+version: 96.1-dev
+director_uuid: e2b72674-23b4-41c4-bd5c-43be313600b6
+
+release:
+    name: cloudfoundry
+    version: 96.1-dev
+
+compilation:
+  workers: 2
+  network: private
+  cloud_properties:
+    instance_type: m1.small
+    key_name: deployer
+
+update:
+  canaries: 1
+  canary_watch_time: 3000-90000
+  update_watch_time: 3000-90000
+  max_in_flight: 1
+  max_errors: 1 
+
+networks:
+- name: private
+  type: dynamic
+  cloud_properties:
+    security_groups:
+    - default
+- name: public 
+  type: vip
+  cloud_properties:
+    security_groups:
+       - default
+
+resource_pools:
+- name: dea
+  network: private
+  size: 4
+  stemcell: 
+    name: micro-bosh-stemcell
+    version: 0.6.4
+  cloud_properties: 
+    instance_type: m1.small
+    key_name: deployer
+  env: 
+    bosh:
+      password: $6$XLI2E4O.Z9$FgtcuRKhGwEhvdFnRnQcb0Qnh7LXnzxTtAKjmB2Fylf3AmQ6TJ.hBKp7b7t0ThXLnFQYQVkFOGJdwSs0erMNY/
+- name: infrastructure
+  network: private
+  size: 10
+  stemcell: 
+    name: micro-bosh-stemcell
+    version: 0.6.4
+  cloud_properties:
+    instance_type: m1.small
+    key_name: deployer
+  env: 
+    bosh:
+      password: $6$XLI2E4O.Z9$FgtcuRKhGwEhvdFnRnQcb0Qnh7LXnzxTtAKjmB2Fylf3AmQ6TJ.hBKp7b7t0ThXLnFQYQVkFOGJdwSs0erMNY/
+
+jobs:
+- name: debian_nfs_server
+  template: debian_nfs_server
+  instances: 1
+  resource_pool: infrastructure
+  persistent_disk: 8192
+  networks:
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: cloud_controller
+  template: cloud_controller
+  instances: 2
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: dea
+  template: dea
+  instances: 4
+  resource_pool: dea
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: router
+  template: router
+  instances: 1
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+  - name: public
+    static_ips: 
+    - 64.151.120.21
+- name: stager
+  template: stager
+  instances: 1
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: ccdb_postgres
+  template: ccdb_postgres
+  instances: 1
+  resource_pool: infrastructure
+  persistent_disk: 8192
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: vcap_redis
+  template: vcap_redis
+  instances: 1
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: health_manager
+  template: health_manager
+  instances: 1
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+- name: nats
+  template: nats
+  instances: 1
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+
+
+properties:
+  domain: cf.pistoncloud.com
+
+  env: {}
+
+  networks:
+    apps: private
+    management: private
+
+  nats:
+    user: nats
+    password: nats
+    address: 172.29.3.27
+    port: 4222
+
+  cc:
+    srv_api_uri: http://api.cf.pistoncloud.com
+    external_uri: cf.pistoncloud.com
+    password: aaauuLaap44jadlas2l312lk
+    token: aaaf4eaa8c1758f66d5cb7adcb24adb9d7
+    use_nginx: true
+    new_stager_percent: 25
+    new_stager_email_regexp: '.*@pistoncloud.com.com'
+    staging_upload_user: aaafhgjg
+    staging_upload_password: AAAfdase9
+    allow_registration: true
+    uaa:
+      enabled: false
+      resource_id: cloud_controller
+      client_secret: aaaNxRJcx6cpv
+    admins:
+    - chris@pistoncloud.com
+
+  stager:
+    max_staging_duration: 120
+    max_active_tasks: 20
+    queues:
+    - staging
+
+  ccdb:
+    user: ccadmin
+    password: aaaBauWauZZb2
+    address: 172.29.3.40
+    port: 5524
+    pool_size: 10
+    dbname: appcloud
+    roles:
+    - tag: admin
+      name: ccadmin
+      password: aaaBauWauZZb2
+    databases:
+    - tag: cc
+      name: appcloud
+
+  vcap_redis:
+    address: 172.29.3.33
+    port: 5454
+    password: aaaxbL98RWpwBuUJvKNojnpIcRb1ot2
+    maxmemory: 1000000000 # 2GB
+
+  dea:
+    max_memory: 1024
+
+  nfs_server:
+    address: 172.29.3.43
+    network: 172.29.3.0/24
+
+  router:
+    status:
+      port: 8080
+      user: aaaUxXlS0pc71wVef
+      password: aaamaIf9vPV4mJyBe
+
+  uaa:
+    cc:
+      token_secret: aaabxaiC371JM
+      client_secret: $2a$08$dahioBqSkqa1AbLvaqkLoe5W0aOPN3Ia9W0xkeB926G.AZJhq1SsK
+    batch:
+      username: do0H2AKay2jAc
+      password: FSCTiplI5Q83n
+

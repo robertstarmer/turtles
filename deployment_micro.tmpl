@@ -1,0 +1,33 @@
+---
+name: microbosh-openstack
+
+env:
+  bosh:
+    password: <$= config['salted_password'] $>
+
+logging:
+  level: DEBUG
+
+network:
+  type: dynamic
+
+resources:
+  persistent_disk: 4096
+  cloud_properties:
+    instance_type: m1.small
+
+cloud:
+  plugin: openstack
+  properties:
+    openstack:
+      auth_url: <%= config['os_auth_url'] %>
+      username: <%= config['os_username'] %>
+      api_key:  <%= config['os_api_key'] %>
+      tenant:   <%= config['tenant'] %>
+      default_key_name: deployer
+      default_security_groups: ["default"]
+      private_key: /home/vcap/.ssh/deployer.pem
+    registry:
+      endpoint: http://admin:admin@localhost:25889
+      user: admin
+      password: admin
