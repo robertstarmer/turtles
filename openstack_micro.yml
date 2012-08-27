@@ -13,7 +13,7 @@ properties:
     management: local
   nats:
     user: nats
-    password: <%= config['generated_nats_pass'] or 'nats' %>
+    password: <%= config['nats_pass'] or 'nats' %>
     address: 127.0.0.1
     port: 4222
   redis:
@@ -22,7 +22,7 @@ properties:
     password: redis
   postgres:
     user: postgres
-    password: <%= config['generated_postgres_pass'] %>
+    password: <%= config['postgres_pass'] %>
     address: 127.0.0.1
     port: 5432
     database: bosh
@@ -32,10 +32,10 @@ properties:
     port: 25250
     director:
       user: director
-      password: <%= config['generated_director_pass'] or 'director' %>
+      password: <%= config['director_pass'] or 'director' %>
     agent:
       user: agent
-      password: <%= config['generated_agent_pass'] or 'agent' %>
+      password: <%= config['agent_pass'] or 'agent' %>
   director:
     address: 127.0.0.1
     name: micro
@@ -45,9 +45,9 @@ properties:
     http:
       port: 25777
       user: admin
-      password: <%= config['generated_registry_pass'] or 'admin' %>
+      password: admin 
     db:
-      database: postgres://postgres:<%= config['generated_postgres_pass']%>@localhost/bosh
+      database: postgres://postgres:<%= config['postgres_pass']%>@localhost/bosh
       max_connections: 32
       pool_timeout: 10
   hm:
@@ -58,7 +58,7 @@ properties:
     loglevel: info
     director_account:
       user: admin
-      password: <%= config['generated_director_account_pass'] %>
+      password: <%= config['director_account_pass'] %>
     intervals:
       poll_director: 60
       poll_grace_period: 30

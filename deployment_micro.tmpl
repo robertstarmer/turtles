@@ -3,7 +3,7 @@ name: microbosh-openstack
 
 env:
   bosh:
-    password: <$= config['salted_password'] $>
+    password: <%= config['salted_password'] %>
 
 logging:
   level: DEBUG
@@ -20,13 +20,13 @@ cloud:
   plugin: openstack
   properties:
     openstack:
-      auth_url: <%= config['os_auth_url'] %>
-      username: <%= config['os_username'] %>
-      api_key:  <%= config['os_api_key'] %>
-      tenant:   <%= config['tenant'] %>
-      default_key_name: deployer
+      auth_url: <%= config['cpi_creds']['openstack_auth_url'] %>
+      username: <%= config['cpi_creds']['openstack_username'] %>
+      api_key:  <%= config['cpi_creds']['openstack_api_key'] %>
+      tenant:   <%= config['cpi_creds']['openstack_tenant'] %>
       default_security_groups: ["default"]
-      private_key: /home/vcap/.ssh/deployer.pem
+      default_key_name: <%= config['key']['name'] %>
+      private_key: <%= config['key']['path'] %>
     registry:
       endpoint: http://admin:admin@localhost:25889
       user: admin
