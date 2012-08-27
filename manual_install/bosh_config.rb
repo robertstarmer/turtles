@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+require 'erb'
 require 'fileutils'
 require 'fog'
 require 'highline/import'
@@ -177,6 +177,10 @@ if __FILE__ == $0
 
   # GENERATE micro_bosh.yml
   salted_password = `mkpasswd -m sha-512 "#{random(16)}"`.strip
+  puts "XXX"
+  puts salted_password
+  puts "XXX"
+
   config = {:bosh_passsword => salted_password,
             :key => {:name => name,
                      :path => File.expand_path("~/.ssh/#{name}.pem")}}
