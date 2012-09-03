@@ -177,11 +177,7 @@ if __FILE__ == $0
 
   # GENERATE micro_bosh.yml
   salted_password = `mkpasswd -m sha-512 "#{random(16)}"`.strip
-  puts "XXX"
-  puts salted_password
-  puts "XXX"
-
-  config = {:bosh_passsword => salted_password,
+  config = {:bosh_password => salted_password,
             :key => {:name => name,
                      :path => File.expand_path("~/.ssh/#{name}.pem")}}
   config.update(creds[:default])

@@ -10,8 +10,6 @@
 
 2. Create a deployment keypair
   $ ~/generate_keypair <name>
-  # If you don't have a ~/.fog file, this will prompt for your openstack 
-  # credentials then generate a keypair and write it to ~/.ssh/<name>.pem
   #
   # If name is unspecified a random name will be generated 
   #   e.g. bosh-fa7deff0
@@ -19,9 +17,7 @@
 3. Configure your initial bosh installation
   
   $ ~/bosh_config <key_name>
-  # If you don't have a ~/.fog file, this will prompt for your openstack
-  # credentials then generate a deployment and a release manifest. The
-  # keyname refers to the keypair generated in the previous step.
+  # The keyname refers to the keypair generated in the previous step.
      
 4. Build the release, this step will take a while.
   $ cd /var/vcap/releases/bosh-release
@@ -52,7 +48,7 @@
 Cloud Foundry
 
 1. Provision five floating IP addresses for your cloudfoundry installation.
-3. Prepare the configuration.
+2. Prepare the configuration.
    $ mkdir -p /var/vcap/deployments/cloudfoundry
 
    # Get UUID and IP of Bosh Director
@@ -66,7 +62,7 @@ Cloud Foundry
    $ vi /var/vcap/deployments/cloudfoundry/cloudfoundry.yml
    # You'll need to update the floating addresses for the jobs and their properties.
 
-4. Deploy
+3. Deploy
   $ cd /var/vcap/deployments
   $ bosh deployment cloudfoundry/cloudfoundry.yml
   $ bosh deploy

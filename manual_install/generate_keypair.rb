@@ -38,7 +38,7 @@ def random(length=8)
 end
 
 if __FILE__ == $0
-  name = ARGV.shift or "bosh-#{random}"
+  name = ARGV.shift || "bosh-#{random}"
 
   creds = {}
   unless File.exists?(File.expand_path("~/.fog"))
@@ -52,4 +52,6 @@ if __FILE__ == $0
   keypair.write(keypath)
 
   FileUtils.chown 'vcap', 'vcap', keypath
+
+  puts name
 end
