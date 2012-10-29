@@ -1,14 +1,18 @@
 
 CLOUD_ARCH = 'aws'
 WORK_DIR = "/Users/progrium/Projects/turtles/work"
-DATA_DIR = "/Users/progrium/Projects/turtles/turtles/data"
+TURTLES_DIR = "/Users/progrium/Projects/turtles/turtles"
 
 def data_file(filename, arch=false)
   if arch
-    File.join([DATA_DIR, CLOUD_ARCH, filename])
+    File.join([TURTLES_DIR, 'data', CLOUD_ARCH, filename])
   else
-    File.join([DATA_DIR, filename])
+    File.join([TURTLES_DIR, 'data', filename])
   end
+end
+
+def script_file(filename)
+  File.join([TURTLES_DIR, 'scripts', filename])
 end
 
 # find /var/tmp -name bosh-stemcell*
@@ -19,7 +23,7 @@ task :micro_bosh_stemcell => WORK_DIR do
   cd WORK_DIR
   sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
   cd 'bosh-release' do
-    # TODO: fix submodules with script
+    sh "#{script_file('fix_gitmodules.sh')} .gitmodules"
     sh 'git submodule update --init'
     sh 'git stash'
     cp data_file('bosh-release-config.yml'), 'config/dev.yml' 
