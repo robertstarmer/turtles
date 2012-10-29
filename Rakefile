@@ -1,7 +1,12 @@
+if ENV['HOME'] == '/Users/progrium'
+  WORK_DIR = "/Users/progrium/Projects/turtles/work"
+  TURTLES_DIR = "/Users/progrium/Projects/turtles/turtles"
+else
+  WORK_DIR = File.expand_path("~/work")
+  TURTLES_DIR = File.expand_path("~/turtles")
+end
 
 CLOUD_ARCH = 'aws'
-WORK_DIR = "/Users/progrium/Projects/turtles/work"
-TURTLES_DIR = "/Users/progrium/Projects/turtles/turtles"
 
 def data_file(filename, arch=false)
   if arch

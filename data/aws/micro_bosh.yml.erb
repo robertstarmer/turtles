@@ -1,0 +1,38 @@
+---
+name: aws
+
+logging:
+  level: DEBUG
+
+network:
+  type: dynamic
+  vip: <%= ip %>
+
+resources:
+  persistent_disk: 20000
+  cloud_properties:
+    instance_type: m1.small
+    availability_zone: us-west-2c
+
+cloud:
+  plugin: aws
+  properties:
+    aws:
+      access_key_id: <%= access_key_id %>
+      secret_access_key: <%= secret_access_key %>
+      default_key_name: bosh
+      default_security_groups: ["bosh"]
+      ec2_private_key: ~/.ssh/bosh
+      region: us-west-2
+      ec2_endpoint: ec2.us-west-2.amazonaws.com
+
+apply_spec:
+  agent:
+    blobstore:
+      address: <%= ip %>
+    nats:
+      address: <%= ip %>
+  properties:
+    aws_registry:
+      address: <%= ip %>
+
