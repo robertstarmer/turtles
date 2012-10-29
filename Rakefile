@@ -15,7 +15,7 @@ end
 PROVIDER = Turtles.config['cloud'][:provider]
 
 def data_file(filename, provider=false)
-  if arch
+  if provider
     File.join([TURTLES_DIR, 'data', PROVIDER, filename])
   else
     File.join([TURTLES_DIR, 'data', filename])
