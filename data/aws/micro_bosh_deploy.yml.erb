@@ -1,5 +1,5 @@
 ---
-name: aws
+name: micro
 
 logging:
   level: DEBUG
@@ -12,7 +12,7 @@ resources:
   persistent_disk: 20000
   cloud_properties:
     instance_type: m1.small
-    availability_zone: us-west-2c
+    availability_zone: <%= aws_region %>c
 
 cloud:
   plugin: aws
@@ -23,8 +23,8 @@ cloud:
       default_key_name: bosh
       default_security_groups: ["bosh"]
       ec2_private_key: ~/.ssh/bosh
-      region: us-west-2
-      ec2_endpoint: ec2.us-west-2.amazonaws.com
+      region: <%= aws_region %>
+      ec2_endpoint: ec2.<%= aws_region %>.amazonaws.com
 
 apply_spec:
   agent:
