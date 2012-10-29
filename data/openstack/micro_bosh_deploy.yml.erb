@@ -1,0 +1,37 @@
+---
+name: micro
+
+logging:
+  level: DEBUG
+
+network:
+  type: dynamic
+  vip: <%= ip %>
+
+resources:
+  persistent_disk: 4096
+  cloud_properties:
+    instance_type: m1.small
+
+cloud:
+  plugin: openstack
+  properties:
+    openstack:
+      auth_url: <%= openstack_auth_url %>
+      username: <%= openstack_username %>
+      api_key: <%= openstack_api_key %>
+      tenant: <%= openstack_tenant %>
+      default_security_groups: ["turtles-bosh-micro"]
+      default_key_name: turtles
+      private_key: <%= private_keyfile %>
+
+apply_spec:
+  agent:
+    blobstore:
+      address: <%= ip %>
+    nats:
+      address: <%= ip %>
+  properties:
+    aws_registry:
+      address: <%= ip %>
+

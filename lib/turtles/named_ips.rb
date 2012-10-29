@@ -1,9 +1,16 @@
 require 'rubygems'
 require 'fog'
 
-module AddressAdaptor
+module OpenStackAdapter
   def server_id; instance_id; end
   def public_ip; ip; end
+end
+
+def adapt_address(a)
+  if Turtles.cloud.class.to_s.include? "OpenStack"
+    a.extend(::OpenStackAdapter)
+  end
+  a
 end
 
 module Turtles
@@ -12,7 +19,7 @@ module Turtles
 
     def self.get_ip(name)
       all_ips = Turtles.cloud.addresses
-      all_ips.each {|a| a.extend(AddressAdapter) }
+      all_ips.collect {|a| adapt_address(a) }
       unassigned_ips = all_ips.select {|a| a.server_id.nil? }
       all_ips = all_ips.map(&:public_ip)
       unassigned_ips = unassigned_ips.map(&:public_ip)
@@ -26,8 +33,7 @@ module Turtles
       end
       unnamed_ips = unassigned_ips - cache.values
       if unnamed_ips.empty?
-        address = Turtles.cloud.addresses.create
-        address.extend(AddressAdapter)
+        address = adapt_address(Turtles.cloud.addresses.create)
         unnamed_ips << address.public_ip
       end
       cache[name] = unnamed_ips.shift
