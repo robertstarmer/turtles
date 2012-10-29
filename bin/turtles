@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+#
+$:.unshift(File.expand_path("../../lib", __FILE__))
+
+require 'turtles'
+
+puts Turtles::NamedIP.get_ip(ARGV.first)
