@@ -15,54 +15,68 @@ end
 PROVIDER = Turtles.config['cloud'][:provider]
 
 def data_file(filename, provider=false)
-  if provider
-    File.join([TURTLES_DIR, 'data', PROVIDER, filename])
-  else
-    File.join([TURTLES_DIR, 'data', filename])
+  File.join([TURTLES_DIR, 'data', provider ? PROVIDER : nil, filename].compact)
+end
+def turtles_path(*parts);   File.join(parts.unshift(TURTLES_DIR)); end
+def work_path(*parts);      File.join(parts.unshift(WORK_DIR)); end
+
+turtles_pk                = work_path('turtles.pem')
+deploy_dir                = work_path('deployments')
+bosh_release              = work_path('bosh-release.tgz')
+micro_bosh_deploy_dir     = work_path('deployments', 'micro')
+micro_bosh_deploy_config  = work_path('deployments', 'micro', 'micro_bosh.yml')
+micro_bosh_stemcell       = work_path('micro-bosh-stemcell.tgz')
+bosh_stemcell             = work_path('bosh-stemcell.tgz')
+
+directory WORK_DIR
+directory deploy_dir
+directory micro_bosh_deploy_dir
+
+def swift(*args, &block)
+  auth_url = Turtles.config['config'][:openstack_auth_url]
+  admin_key = Turtles.config['config'][:openstack_admin_key]
+  sh "swift -A #{auth_url} -V 2.0 -U admin:admin -K #{admin_key} #{args.join(' ')}", &block
+end
+
+file bosh_release => WORK_DIR do |t|
+  cd WORK_DIR
+  sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
+  cd 'bosh-release' do
+    sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
+    sh 'git submodule update --init'
+    sh 'git stash'
+    cp data_file('bosh-release-config.yml'), 'config/dev.yml' 
+    sh 'bosh create release --with-tarball'
+    tarball = pwd + '/' + Dir['dev_releases/*.tgz'].first
+    mv tarball, t.name
   end
 end
 
-def script_file(filename)
-  File.join([TURTLES_DIR, 'scripts', filename])
-end
-
-turtles_pk = File.join([WORK_DIR, 'turtles.pem'])
-
-deploy_dir = File.join([WORK_DIR, 'deployments'])
-micro_bosh_deploy_dir = File.join([deploy_dir, 'micro'])
-micro_bosh_deploy_config = File.join([micro_bosh_deploy_dir, 'micro_bosh.yml'])
-micro_bosh_stemcell = File.join([WORK_DIR, 'micro-bosh-stemcell.tgz'])
-
-directory WORK_DIR
-
-file micro_bosh_stemcell => WORK_DIR do |t|
+file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
   if PREBUILT_STEMCELL
     # we're just going to use the prebuilt stemcell later
     touch t.name 
   else
     cd WORK_DIR
-    rm_rf 'bosh-release'
-    sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
-    cd 'bosh-release' do
-      sh "#{script_file('fix_gitmodules.sh')} #{pwd}/.gitmodules"
-      sh 'git submodule update --init'
-      sh 'git stash'
-      cp data_file('bosh-release-config.yml'), 'config/dev.yml' 
-      sh 'bosh create release --with-tarball'
-      tarball = pwd + '/' + Dir['dev_releases/*.tgz'].first
-      cd 'src/bosh/agent' do
-        sh 'bundle install --without=development test'
-        manifest = data_file('micro_bosh_stemcell.yml')
-        sh "rake stemcell2:micro[#{PROVIDER},#{manifest},#{tarball}]"
-        stemcell = `find /var/tmp -name micro-bosh-stemcell*`.strip
-        mv stemcell, t.name
-      end
+    cd 'bosh-release/src/bosh/agent' do
+      sh 'bundle install --without=development test'
+      manifest = data_file('micro_bosh_stemcell.yml')
+      sh "rake stemcell2:micro[#{PROVIDER},#{manifest},#{bosh_release}]"
+      stemcell = `find /var/tmp -name micro-bosh-stemcell*`.strip
+      mv stemcell, t.name
     end
   end
 end
 
-directory deploy_dir
-directory micro_bosh_deploy_dir
+file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
+  cd WORK_DIR
+  cd 'bosh-release/src/bosh/agent' do
+    sh 'bundle install --without=development test'
+    sh "rake stemcell2:basic[#{PROVIDER}]"
+    stemcell = `find /var/tmp -name bosh-stemcell*`.strip
+    mv stemcell, t.name
+  end
+end
 
 file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk] do |t|
   if Turtles.cloud.class.to_s.include? "OpenStack"
@@ -130,4 +144,8 @@ end
 
 task :reset do
   rm_rf WORK_DIR
+end
+
+task :swift do
+  sh "pip install #{turtles_path('pkgs', 'swift.tar.gz')}"
 end
