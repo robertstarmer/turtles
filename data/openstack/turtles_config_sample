@@ -1,0 +1,7 @@
+---
+cloud:
+  :provider: openstack
+  :openstack_auth_url: http://208.96.8.83:5000/v2.0/tokens
+  :openstack_username: progrium
+  :openstack_api_key: PistonTurtlePower
+  :openstack_tenant: Turtles
