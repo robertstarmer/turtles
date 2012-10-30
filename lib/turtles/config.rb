@@ -18,7 +18,7 @@ module Turtles
   def self.setup_cloud
     cloud = self.config['cloud'].dup
     cloud.delete :openstack_admin_key
-    @cloud = Fog::Compute.new(self.config['cloud'])
+    @cloud = Fog::Compute.new(cloud)
   end
 
   def self.load_config

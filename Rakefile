@@ -107,7 +107,12 @@ file turtles_pk do |t|
 end
 
 task :micro_bosh_cloud_setup do
-  group = Turtles.cloud.security_groups.get("turtles-bosh-micro")
+  if Turtles.cloud.class.to_s.include? "OpenStack"
+    groups = Turtles.cloud.security_groups
+    group = groups.find {|g| g.name == "turtles-bosh-micro" }
+  else
+    group = Turtles.cloud.security_groups.get("turtles-bosh-micro")
+  end
   if group.nil?
     group = Turtles.cloud.security_groups.new({
       :name => "turtles-bosh-micro",
@@ -115,7 +120,11 @@ task :micro_bosh_cloud_setup do
     })
     group.save
     # too many ports to be specific yet
-    group.authorize_port_range(0..65535)
+    if Turtles.cloud.class.to_s.include? "OpenStack"
+      group.create_security_group_rule(1, 65535)
+    else
+      group.authorize_port_range(0..65535)
+    end
   end
 end
 
