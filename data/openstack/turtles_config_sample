@@ -5,3 +5,4 @@ cloud:
   :openstack_username: progrium
   :openstack_api_key: PistonTurtlePower
   :openstack_tenant: Turtles
+  :openstack_admin_key: 

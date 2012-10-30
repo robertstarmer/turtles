@@ -149,3 +149,9 @@ end
 task :swift do
   sh "pip install #{turtles_path('pkgs', 'swift.tar.gz')}"
 end
+
+task :download_stemcells => WORK_DIR do
+  cd WORK_DIR
+  swift 'download', 'turtles', 'bosh-stemcell.tgz'
+  swift 'download', 'turtles', 'micro-bosh-stemcell.tgz'
+end
