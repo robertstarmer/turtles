@@ -66,6 +66,7 @@ file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
     end
   end
 end
+task :micro_stemcell => micro_bosh_stemcell
 
 file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
   if File.exist? t.name
@@ -80,6 +81,7 @@ file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
     end
   end
 end
+task :stemcell => bosh_stemcell
 
 file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk] do |t|
   if Turtles.cloud.class.to_s.include? "OpenStack"
@@ -166,4 +168,12 @@ task :download_stemcells => [:swift, WORK_DIR] do
   cd WORK_DIR
   swift 'download', 'turtles', 'bosh-stemcell.tgz'
   swift 'download', 'turtles', 'micro-bosh-stemcell.tgz'
+end
+
+task :config do
+  config_path = File.expand_path("~/.turtles")
+  unless File.exist? config_path
+    cp data_file('config_sample'), config_path
+  end
+  sh "vi #{config_path}"
 end
