@@ -59,7 +59,7 @@ file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
     cd WORK_DIR
     cd 'bosh-release/src/bosh/agent' do
       sh 'bundle install --without=development test'
-      manifest = data_file('micro_bosh_stemcell.yml')
+      manifest = work_path('bosh-release', 'micro', "#{PROVIDER}.yml")
       sh "rake stemcell2:micro[#{PROVIDER},#{manifest},#{bosh_release}]"
       stemcell = `find /var/tmp -name micro-bosh-stemcell*`.strip
       mv stemcell, t.name
