@@ -53,9 +53,8 @@ file bosh_release => WORK_DIR do |t|
 end
 
 file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
-  if PREBUILT_STEMCELL
-    # we're just going to use the prebuilt stemcell later
-    touch t.name 
+  if PREBUILT_STEMCELL or File.exist? t.name
+    touch t.name
   else
     cd WORK_DIR
     cd 'bosh-release/src/bosh/agent' do
@@ -69,12 +68,16 @@ file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
 end
 
 file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
-  cd WORK_DIR
-  cd 'bosh-release/src/bosh/agent' do
-    sh 'bundle install --without=development test'
-    sh "rake stemcell2:basic[#{PROVIDER}]"
-    stemcell = `find /var/tmp -name bosh-stemcell*`.strip
-    mv stemcell, t.name
+  if File.exist? t.name
+    touch t.name
+  else
+    cd WORK_DIR
+    cd 'bosh-release/src/bosh/agent' do
+      sh 'bundle install --without=development test'
+      sh "rake stemcell2:basic[#{PROVIDER}]"
+      stemcell = `find /var/tmp -name bosh-stemcell*`.strip
+      mv stemcell, t.name
+    end
   end
 end
 
