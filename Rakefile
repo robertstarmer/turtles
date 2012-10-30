@@ -33,8 +33,8 @@ directory deploy_dir
 directory micro_bosh_deploy_dir
 
 def swift(*args, &block)
-  auth_url = Turtles.config['config'][:openstack_auth_url]
-  admin_key = Turtles.config['config'][:openstack_admin_key]
+  auth_url = Turtles.config['cloud'][:openstack_auth_url]
+  admin_key = Turtles.config['cloud'][:openstack_admin_key]
   sh "swift -A #{auth_url} -V 2.0 -U admin:admin -K #{admin_key} #{args.join(' ')}", &block
 end
 
@@ -150,7 +150,7 @@ task :swift do
   sh "pip install #{turtles_path('pkgs', 'swift.tar.gz')}"
 end
 
-task :download_stemcells => WORK_DIR do
+task :download_stemcells => [:swift, WORK_DIR] do
   cd WORK_DIR
   swift 'download', 'turtles', 'bosh-stemcell.tgz'
   swift 'download', 'turtles', 'micro-bosh-stemcell.tgz'
