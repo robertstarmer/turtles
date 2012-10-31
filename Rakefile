@@ -20,6 +20,7 @@ end
 def turtles_path(*parts);   File.join(parts.unshift(TURTLES_DIR)); end
 def work_path(*parts);      File.join(parts.unshift(WORK_DIR)); end
 
+turtles_config            = File.expand_path("~/.turtles")
 turtles_pk                = work_path('turtles.pem')
 deploy_dir                = work_path('deployments')
 bosh_release              = work_path('bosh-release.tgz')
@@ -38,6 +39,10 @@ def swift(*args, &block)
   sh "swift -A #{auth_url} -V 2.0 -U admin:admin -K #{admin_key} #{args.join(' ')}", &block
 end
 
+def bosh_uuid
+  `bosh status | grep UUID`.strip.split.last
+end
+
 file bosh_release => WORK_DIR do |t|
   cd WORK_DIR
   sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
@@ -53,7 +58,7 @@ file bosh_release => WORK_DIR do |t|
 end
 
 file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
-  if PREBUILT_STEMCELL or File.exist? t.name
+  if File.exist? t.name
     touch t.name
   else
     cd WORK_DIR
@@ -83,7 +88,7 @@ file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
 end
 task :stemcell => bosh_stemcell
 
-file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk] do |t|
+file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk, turtles_config] do |t|
   if Turtles.cloud.class.to_s.include? "OpenStack"
     openstack_auth_url = Turtles.config['cloud'][:openstack_auth_url]
     openstack_username = Turtles.config['cloud'][:openstack_username]
@@ -102,7 +107,7 @@ file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk] do |t|
   end
 end
 
-file turtles_pk do |t|
+file turtles_pk => turtles_config do |t|
   # runs if no pk file, so always recreate keypair
   keypair = Turtles.cloud.key_pairs.get("turtles")
   keypair.destroy if keypair
@@ -111,7 +116,7 @@ file turtles_pk do |t|
   keypair.write(t.name)
 end
 
-task :micro_bosh_cloud_setup do
+task :micro_bosh_cloud_setup => turtles_config do
   if Turtles.cloud.class.to_s.include? "OpenStack"
     groups = Turtles.cloud.security_groups
     group = groups.find {|g| g.name == "turtles-bosh-micro" }
@@ -134,18 +139,20 @@ task :micro_bosh_cloud_setup do
 end
 
 task :micro_bosh_deploy =>
-  [:micro_bosh_cloud_setup, micro_bosh_deploy_config, turtles_pk, micro_bosh_stemcell] do
+  [:micro_bosh_cloud_setup,
+   micro_bosh_deploy_config,
+   turtles_pk,
+   turtles_config,
+   micro_bosh_stemcell,
+   bosh_stemcell] do
 
-  if PREBUILT_STEMCELL
-    stemcell = PREBUILT_STEMCELL
-  else
-    stemcell = micro_bosh_stemcell
-  end
   cd deploy_dir do
+    rm "bosh-deployments.yml"
     sh "bosh -n micro deployment micro"
-    sh "bosh -n micro deploy #{stemcell}"
+    sh "bosh -n micro deploy #{micro_bosh_stemcell}"
     sh "bosh -n target http://#{Turtles::NamedIP.get_ip("micro-bosh")}:25555"
     sh "bosh -n login admin admin"
+    sh "bosh -n upload stemcell #{bosh_stemcell}"
     sh "bosh status"
   end
 end
@@ -170,10 +177,27 @@ task :download_stemcells => [:swift, WORK_DIR] do
   swift 'download', 'turtles', 'micro-bosh-stemcell.tgz'
 end
 
-task :config do
+task :upload_stemcells => [:swift, WORK_DIR] do
+  cd WORK_DIR
+  ['bosh-stemcell.tgz', 'micro-bosh-stemcell.tgz'].each do |f|
+    if File.exist? f
+      swift 'delete', 'turtles', f
+      swift 'upload', 'turtles', f
+    end
+  end
+end
+
+task :install_fixed_cpi do
+  cd turtles_path('pkgs') do
+    sh "gem install bosh_openstack_cpi-0.0.3.gem"
+  end
+end
+
+task turtles_config => :install_fixed_cpi do
   config_path = File.expand_path("~/.turtles")
   unless File.exist? config_path
     cp data_file('config_sample'), config_path
   end
   sh "vi #{config_path}"
 end
+task :config => turtles_config
