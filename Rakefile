@@ -12,10 +12,9 @@ else
   PREBUILT_STEMCELL = nil
 end
 
-PROVIDER = Turtles.config['cloud'][:provider]
-
-def data_file(filename, provider=false)
-  File.join([TURTLES_DIR, 'data', provider ? PROVIDER : nil, filename].compact)
+def provider; Turtles.config['cloud'][:provider]; end
+def data_file(filename, use_provider=false)
+  File.join([TURTLES_DIR, 'data', use_provider ? provider() : nil, filename].compact)
 end
 def turtles_path(*parts);   File.join(parts.unshift(TURTLES_DIR)); end
 def work_path(*parts);      File.join(parts.unshift(WORK_DIR)); end
@@ -64,8 +63,8 @@ file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
     cd WORK_DIR
     cd 'bosh-release/src/bosh/agent' do
       sh 'bundle install --without=development test'
-      manifest = work_path('bosh-release', 'micro', "#{PROVIDER}.yml")
-      sh "rake stemcell2:micro[#{PROVIDER},#{manifest},#{bosh_release}]"
+      manifest = work_path('bosh-release', 'micro', "#{provider}.yml")
+      sh "rake stemcell2:micro[#{provider},#{manifest},#{bosh_release}]"
       stemcell = `find /var/tmp -name micro-bosh-stemcell*`.strip
       mv stemcell, t.name
     end
@@ -80,7 +79,7 @@ file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
     cd WORK_DIR
     cd 'bosh-release/src/bosh/agent' do
       sh 'bundle install --without=development test'
-      sh "rake stemcell2:basic[#{PROVIDER}]"
+      sh "rake stemcell2:basic[#{provider}]"
       stemcell = `find /var/tmp -name bosh-stemcell*`.strip
       mv stemcell, t.name
     end
