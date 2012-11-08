@@ -197,11 +197,11 @@ task :install_fixed_cpi do
   end
 end
 
-task turtles_config => :install_fixed_cpi do
-  config_path = File.expand_path("~/.turtles")
-  unless File.exist? config_path
-    cp data_file('config_sample'), config_path
-  end
+task turtles_config do
+  return if File.exist? turtles_config
+  cp data_file('config_sample'), turtles_config
+end
+
+task :config => turtles_config do
   sh "vi #{config_path}"
 end
-task :config => turtles_config
