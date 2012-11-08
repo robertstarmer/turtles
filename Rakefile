@@ -43,8 +43,17 @@ def bosh_uuid
   `bosh status | grep UUID`.strip.split.last
 end
 
+def exist(t)
+  if File.exist? t.name
+    touch t.name
+    true
+  else
+    false
+  end
+end
+
 file bosh_release => WORK_DIR do |t|
-  return touch t.name if File.exist? t.name
+  next if exist t
   cd WORK_DIR
   rm_rf 'bosh-release'
   sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
@@ -60,7 +69,7 @@ file bosh_release => WORK_DIR do |t|
 end
 
 file bosh_checkout => WORK_DIR do |t|
-  return touch t.name if File.exist? t.name
+  next if exist t
   cd WORK_DIR
   rm_rf 'bosh'
   sh 'git clone git://github.com/cloudfoundry/bosh.git'
@@ -68,7 +77,7 @@ end
 
 
 file micro_bosh_stemcell => [bosh_checkout, bosh_release, WORK_DIR] do |t|
-  return touch t.name if File.exist? t.name
+  next if exist t
   cd WORK_DIR
   cd 'bosh/agent' do
     sh 'bundle install --without=development test'
@@ -81,7 +90,7 @@ end
 task :micro_stemcell => micro_bosh_stemcell
 
 file bosh_stemcell => [bosh_checkout, WORK_DIR] do |t|
-  return touch t.name if File.exist? t.name
+  next if exist t
   cd WORK_DIR
   cd 'bosh/agent' do
     sh 'bundle install --without=development test'
@@ -197,8 +206,8 @@ task :install_fixed_cpi do
   end
 end
 
-task turtles_config do
-  return if File.exist? turtles_config
+task turtles_config do |t|
+  next if exist t
   cp data_file('config_sample'), turtles_config
 end
 
