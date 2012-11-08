@@ -57,7 +57,7 @@ file bosh_release => WORK_DIR do |t|
   end
 end
 
-directory bosh_checkout => WORK_DIR do |t|
+file bosh_checkout => WORK_DIR do |t|
   cd WORK_DIR
   sh 'git clone git://github.com/cloudfoundry/bosh.git'
 end
