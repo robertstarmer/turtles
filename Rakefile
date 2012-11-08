@@ -23,6 +23,7 @@ turtles_config            = File.expand_path("~/.turtles")
 turtles_pk                = work_path('turtles.pem')
 deploy_dir                = work_path('deployments')
 bosh_release              = work_path('bosh-release.tgz')
+bosh_checkout             = work_path('bosh')
 micro_bosh_deploy_dir     = work_path('deployments', 'micro')
 micro_bosh_deploy_config  = work_path('deployments', 'micro', 'micro_bosh.yml')
 micro_bosh_stemcell       = work_path('micro-bosh-stemcell.tgz')
@@ -49,11 +50,6 @@ file bosh_release => WORK_DIR do |t|
     sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
     sh 'git submodule update --init'
     sh 'git stash'
-    cd 'src' do
-      # make *sure* we're using latest master of bosh
-      rm_rf 'bosh'
-      sh 'git clone git://github.com/cloudfoundry/bosh.git'
-    end
     cp data_file('bosh-release-config.yml'), 'config/dev.yml' 
     sh 'bosh create release --with-tarball'
     tarball = pwd + '/' + Dir['dev_releases/*.tgz'].first
@@ -61,12 +57,18 @@ file bosh_release => WORK_DIR do |t|
   end
 end
 
-file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
+directory bosh_checkout => WORK_DIR do |t|
+  cd WORK_DIR
+  sh 'git clone git://github.com/cloudfoundry/bosh.git'
+end
+
+
+file micro_bosh_stemcell => [bosh_checkout, bosh_release, WORK_DIR] do |t|
   if File.exist? t.name
     touch t.name
   else
     cd WORK_DIR
-    cd 'bosh-release/src/bosh/agent' do
+    cd 'bosh/agent' do
       sh 'bundle install --without=development test'
       manifest = work_path('bosh-release', 'micro', "#{provider}.yml")
       sh "rake stemcell2:micro[#{provider},#{manifest},#{bosh_release}]"
@@ -77,12 +79,12 @@ file micro_bosh_stemcell => [bosh_release, WORK_DIR] do |t|
 end
 task :micro_stemcell => micro_bosh_stemcell
 
-file bosh_stemcell => [bosh_release, WORK_DIR] do |t|
+file bosh_stemcell => [bosh_checkout, WORK_DIR] do |t|
   if File.exist? t.name
     touch t.name
   else
     cd WORK_DIR
-    cd 'bosh-release/src/bosh/agent' do
+    cd 'bosh/agent' do
       sh 'bundle install --without=development test'
       sh "rake stemcell2:basic[#{provider}]"
       stemcell = `find /var/tmp -name bosh-stemcell*`.strip
