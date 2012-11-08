@@ -44,7 +44,9 @@ def bosh_uuid
 end
 
 file bosh_release => WORK_DIR do |t|
+  return touch t.name if File.exist? t.name
   cd WORK_DIR
+  rm_rf 'bosh-release'
   sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
   cd 'bosh-release' do
     sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
@@ -58,38 +60,34 @@ file bosh_release => WORK_DIR do |t|
 end
 
 file bosh_checkout => WORK_DIR do |t|
+  return touch t.name if File.exist? t.name
   cd WORK_DIR
+  rm_rf 'bosh'
   sh 'git clone git://github.com/cloudfoundry/bosh.git'
 end
 
 
 file micro_bosh_stemcell => [bosh_checkout, bosh_release, WORK_DIR] do |t|
-  if File.exist? t.name
-    touch t.name
-  else
-    cd WORK_DIR
-    cd 'bosh/agent' do
-      sh 'bundle install --without=development test'
-      manifest = work_path('bosh-release', 'micro', "#{provider}.yml")
-      sh "rake stemcell2:micro[#{provider},#{manifest},#{bosh_release}]"
-      stemcell = `find /var/tmp -name micro-bosh-stemcell*`.strip
-      mv stemcell, t.name
-    end
+  return touch t.name if File.exist? t.name
+  cd WORK_DIR
+  cd 'bosh/agent' do
+    sh 'bundle install --without=development test'
+    manifest = work_path('bosh-release', 'micro', "#{provider}.yml")
+    sh "rake stemcell2:micro[#{provider},#{manifest},#{bosh_release}]"
+    stemcell = `find /var/tmp -name micro-bosh-stemcell*`.strip
+    mv stemcell, t.name
   end
 end
 task :micro_stemcell => micro_bosh_stemcell
 
 file bosh_stemcell => [bosh_checkout, WORK_DIR] do |t|
-  if File.exist? t.name
-    touch t.name
-  else
-    cd WORK_DIR
-    cd 'bosh/agent' do
-      sh 'bundle install --without=development test'
-      sh "rake stemcell2:basic[#{provider}]"
-      stemcell = `find /var/tmp -name bosh-stemcell*`.strip
-      mv stemcell, t.name
-    end
+  return touch t.name if File.exist? t.name
+  cd WORK_DIR
+  cd 'bosh/agent' do
+    sh 'bundle install --without=development test'
+    sh "rake stemcell2:basic[#{provider}]"
+    stemcell = `find /var/tmp -name bosh-stemcell*`.strip
+    mv stemcell, t.name
   end
 end
 task :stemcell => bosh_stemcell
