@@ -49,6 +49,11 @@ file bosh_release => WORK_DIR do |t|
     sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
     sh 'git submodule update --init'
     sh 'git stash'
+    cd 'src' do
+      # make *sure* we're using latest master of bosh
+      rm_rf 'bosh'
+      sh 'git clone git://github.com/cloudfoundry/bosh.git'
+    end
     cp data_file('bosh-release-config.yml'), 'config/dev.yml' 
     sh 'bosh create release --with-tarball'
     tarball = pwd + '/' + Dir['dev_releases/*.tgz'].first
