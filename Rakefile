@@ -160,13 +160,34 @@ task :micro_bosh_deploy =>
    bosh_stemcell] do
 
   cd deploy_dir do
-    rm "bosh-deployments.yml"
+    rm_rf "bosh-deployments.yml"
     sh "bosh -n micro deployment micro"
     sh "bosh -n micro deploy #{micro_bosh_stemcell}"
     sh "bosh -n target http://#{Turtles::NamedIP.get_ip("micro-bosh")}:25555"
     sh "bosh -n login admin admin"
     sh "bosh -n upload stemcell #{bosh_stemcell}"
     sh "bosh status"
+  end
+end
+
+task :sample_deploy => WORK_DIR do
+  cd WORK_DIR
+  rm_rf 'bosh-sample-release'
+  sh 'git clone git://github.com/cloudfoundry/bosh-sample-release.git'
+  cd 'bosh-sample-release' do
+    sh "bosh -n upload release releases/wordpress-1.yml" 
+    security_group = "turtles-bosh-micro"
+    director_uuid = bosh_uuid
+    mysql_ip = Turtles::NamedIP.get_ip("sample-mysql")
+    wordpress_ip = Turtles::NamedIP.get_ip("sample-wordpress")
+    nginx_ip = Turtles::NamedIP.get_ip("sample-nginx")
+    nfs_ip = Turtles::NamedIP.get_ip("sample-nfs")
+    template = ERB.new(File.read(data_file('sample_deploy.yml.erb', true)))
+    File.open('wordpress-openstack.yml', 'w') do |f|
+      f.write(template.result(binding))
+    end
+    sh "bosh -n deployment wordpress-openstack.yml"
+    sh "bosh -n deploy"
   end
 end
 
