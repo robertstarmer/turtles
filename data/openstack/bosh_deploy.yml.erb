@@ -1,0 +1,174 @@
+---
+name: bosh
+director_uuid: 3c9b1b7d-7409-44f9-bcc5-18374e5a7462
+release:
+  name: bosh-release
+  version: 9.1-dev
+
+networks:
+  - name: elastic
+    type: vip
+    cloud_properties: {}
+  - name: default
+    type: dynamic
+    cloud_properties:
+      security_groups:
+      - turtles-bosh-micro
+
+resource_pools:
+- name: small
+  stemcell:
+    name: bosh-stemcell
+    version: 0.6.7
+  network: default
+  size: 3
+  cloud_properties:
+    instance_type: m1.small
+- name: medium
+  stemcell:
+    name: bosh-stemcell
+    version: 0.6.7
+  network: default
+  size: 3
+  cloud_properties:
+    instance_type: m1.small
+- name: large
+  stemcell:
+    name: bosh-stemcell
+    version: 0.6.7
+  network: default
+  size: 0
+  cloud_properties:
+    instance_type: m1.small
+
+compilation:
+  workers: 6
+  network: default
+  cloud_properties:
+    instance_type: m1.small
+
+update:
+  canaries: 1
+  canary_watch_time: 3000-120000
+  update_watch_time: 3000-120000
+  max_in_flight: 4
+  max_errors: 1
+
+jobs:
+
+- name: nats
+  template: nats
+  instances: 1
+  resource_pool: small
+  networks:
+  - name: default
+    default: [dns, gateway]
+  - name: elastic
+    static_ips:
+    - 204.51.131.82
+
+- name: postgres
+  template: postgres
+  instances: 1
+  resource_pool: medium
+  networks:
+  - name: default
+    default: [dns, gateway]
+  - name: elastic
+    static_ips:
+    - 204.51.131.83
+
+- name: redis
+  template: redis
+  instances: 1
+  resource_pool: small
+  networks:
+  - name: default
+    default: [dns, gateway]
+  - name: elastic
+    static_ips:
+    - 204.51.131.84
+
+- name: director
+  template: director
+  instances: 1
+  resource_pool: medium
+  networks:
+  - name: default
+    default: [dns, gateway]
+  - name: elastic
+    static_ips:
+    - 204.51.131.85
+
+- name: blobstore
+  template: blobstore
+  instances: 1
+  resource_pool: medium
+  networks:
+  - name: default
+    default: [dns, gateway]
+  - name: elastic
+    static_ips:
+    - 204.51.131.86
+
+properties:
+  env:
+    #http_proxy: "http://<proxy>"
+    #https_proxy: "http://<proxy>"
+    #no_proxy: ""
+
+  blobstore:
+    address: 204.51.131.86
+    port: 25251
+    backend_port: 25552
+    agent:
+      user: agent
+      password: agent
+    director:
+      user: director
+      password: director
+
+  networks:
+    apps: default
+    management: default
+
+  nats:
+    user: nats
+    password: nats
+    address: 204.51.131.82
+    port: 4222
+
+  postgres:
+    user: bosh
+    password: bosh
+    address: 204.51.131.83
+    port: 5432
+    database: bosh
+
+  redis:
+    address: 204.51.131.84
+    port: 25255
+    password: redis
+
+  director:
+    name: bosh_director
+    address: 204.51.131.85
+    port: 25555
+
+  openstack:
+    auth_url: http://208.96.8.83:5000/v2.0/tokens
+    username: progrium
+    api_key: PistonTurtlePower
+    tenant: Turtles
+    default_security_groups: ["turtles-bosh-micro"]
+    default_key_name: turtles
+    stemcell:
+      kernel_id: 68
+      ramdisk_id:
+
+  openstack_registry:
+    address: 204.51.131.79
+    http:
+      port: 25777
+      user: admin
+      password: admin
