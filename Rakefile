@@ -5,20 +5,21 @@ require 'fog'
 if ENV['HOME'] == '/Users/progrium'
   WORK_DIR = "/Users/progrium/Projects/turtles/work"
   TURTLES_DIR = "/Users/progrium/Projects/turtles/turtles"
-  PREBUILT_STEMCELL = 'ami-7ac7494a' # for us-west-2
 else
   WORK_DIR = File.expand_path("~/work")
   TURTLES_DIR = File.expand_path("~/turtles")
-  PREBUILT_STEMCELL = nil
 end
 
 def provider; Turtles.config['cloud'][:provider]; end
+
+# Path helpers
 def data_file(filename, use_provider=false)
   File.join([TURTLES_DIR, 'data', use_provider ? provider() : nil, filename].compact)
 end
 def turtles_path(*parts);   File.join(parts.unshift(TURTLES_DIR)); end
 def work_path(*parts);      File.join(parts.unshift(WORK_DIR)); end
 
+# Paths
 turtles_config            = File.expand_path("~/.turtles")
 turtles_pk                = work_path('turtles.pem')
 deploy_dir                = work_path('deployments')
@@ -32,6 +33,8 @@ bosh_stemcell             = work_path('bosh-stemcell.tgz')
 directory WORK_DIR
 directory deploy_dir
 directory micro_bosh_deploy_dir
+
+# Other helpers
 
 def swift(*args, &block)
   auth_url = Turtles.config['cloud'][:openstack_auth_url]
@@ -51,6 +54,8 @@ def exist(t)
     false
   end
 end
+
+# TASKS
 
 file bosh_release => WORK_DIR do |t|
   next if exist t
@@ -87,6 +92,8 @@ file micro_bosh_stemcell => [bosh_checkout, bosh_release, WORK_DIR] do |t|
     mv stemcell, t.name
   end
 end
+
+desc "Build micro bosh stemcell"
 task :micro_stemcell => micro_bosh_stemcell
 
 file bosh_stemcell => [bosh_checkout, WORK_DIR] do |t|
@@ -99,6 +106,8 @@ file bosh_stemcell => [bosh_checkout, WORK_DIR] do |t|
     mv stemcell, t.name
   end
 end
+
+desc "Build basic stemcell"
 task :stemcell => bosh_stemcell
 
 file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk, turtles_config] do |t|
@@ -123,7 +132,7 @@ end
 file turtles_pk => turtles_config do |t|
   # runs if no pk file, so always recreate keypair
   keypair = Turtles.cloud.key_pairs.get("turtles")
-  keypair.destroy if keypair
+  keypair.destroy rescue nil if keypair # rescue because fog expects 200 but we get 202
   keypair = Turtles.cloud.key_pairs.new :name => "turtles"
   keypair.save
   keypair.write(t.name)
@@ -151,6 +160,7 @@ task :micro_bosh_cloud_setup => turtles_config do
   end
 end
 
+desc "Deploy micro bosh"
 task :micro_bosh_deploy =>
   [:micro_bosh_cloud_setup,
    micro_bosh_deploy_config,
@@ -170,6 +180,7 @@ task :micro_bosh_deploy =>
   end
 end
 
+desc "Deploy wordpress sample"
 task :sample_deploy => WORK_DIR do
   cd WORK_DIR
   rm_rf 'bosh-sample-release'
@@ -191,12 +202,14 @@ task :sample_deploy => WORK_DIR do
   end
 end
 
+desc "Delete micro bosh"
 task :micro_bosh_delete do
   cd deploy_dir do
     sh "bosh -n micro delete"
   end
 end
 
+desc "Reset work directory"
 task :reset do
   rm_rf WORK_DIR
 end
@@ -205,12 +218,14 @@ task :swift do
   sh "pip install #{turtles_path('pkgs', 'swift.tar.gz')}"
 end
 
+desc "Download stemcells from swift"
 task :download_stemcells => [:swift, WORK_DIR] do
   cd WORK_DIR
   swift 'download', 'turtles', 'bosh-stemcell.tgz'
   swift 'download', 'turtles', 'micro-bosh-stemcell.tgz'
 end
 
+desc "Upload stemcells to swift"
 task :upload_stemcells => [:swift, WORK_DIR] do
   cd WORK_DIR
   ['bosh-stemcell.tgz', 'micro-bosh-stemcell.tgz'].each do |f|
@@ -222,6 +237,7 @@ task :upload_stemcells => [:swift, WORK_DIR] do
 end
 
 task :install_fixed_cpi do
+  # Ideally taken care of by inception script
   cd turtles_path('pkgs') do
     sh "gem install bosh_openstack_cpi-0.0.3.gem"
   end
@@ -232,6 +248,7 @@ task turtles_config do |t|
   cp data_file('config_sample'), turtles_config
 end
 
+desc "Edit configuration"
 task :config => turtles_config do
   sh "vi #{config_path}"
 end
