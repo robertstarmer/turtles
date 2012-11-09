@@ -22,7 +22,7 @@ cloud:
       api_key: <%= openstack_api_key %>
       tenant: <%= openstack_tenant %>
       default_security_groups: ["turtles-bosh-micro"]
-      default_key_name: turtles
+      default_key_name: <%= keyname %>
       private_key: <%= private_keyfile %>
 
 apply_spec:

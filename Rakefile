@@ -10,6 +10,8 @@ else
   TURTLES_DIR = File.expand_path("~/turtles")
 end
 
+KEYNAME = ENV['KEYNAME'] or "turtles"
+
 def provider; Turtles.config['cloud'][:provider]; end
 
 # Path helpers
@@ -21,7 +23,7 @@ def work_path(*parts);      File.join(parts.unshift(WORK_DIR)); end
 
 # Paths
 turtles_config            = File.expand_path("~/.turtles")
-turtles_pk                = work_path('turtles.pem')
+turtles_pk                = ENV['KEYFILE'] or work_path('turtles.pem')
 deploy_dir                = work_path('deployments')
 bosh_release              = work_path('bosh-release.tgz')
 bosh_checkout             = work_path('bosh')
@@ -123,6 +125,7 @@ file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk, turtles_con
   end
   ip = Turtles::NamedIP.get_ip("micro-bosh")
   private_keyfile = turtles_pk
+  keyname = KEYNAME
   template = ERB.new(File.read(data_file('micro_bosh_deploy.yml.erb', true)))
   File.open(t.name, 'w') do |f|
     f.write(template.result(binding))
@@ -130,10 +133,11 @@ file micro_bosh_deploy_config => [micro_bosh_deploy_dir, turtles_pk, turtles_con
 end
 
 file turtles_pk => turtles_config do |t|
+  next if exist t
   # runs if no pk file, so always recreate keypair
-  keypair = Turtles.cloud.key_pairs.get("turtles")
+  keypair = Turtles.cloud.key_pairs.get(KEYNAME)
   keypair.destroy rescue nil if keypair # rescue because fog expects 200 but we get 202
-  keypair = Turtles.cloud.key_pairs.new :name => "turtles"
+  keypair = Turtles.cloud.key_pairs.new :name => KEYNAME
   keypair.save
   keypair.write(t.name)
 end

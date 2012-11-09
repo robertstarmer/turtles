@@ -7,8 +7,10 @@ def show_usage
   puts "Commands:"
   puts "  prepare"
   puts "  config"
-  puts "  deploy-bosh"
+  puts "  stemcells"
+  puts "  deploy-bosh [keyfile] [keyname]"
   puts "  deploy-cf"
+  puts "  ip <service>"
 end
 
 if ARGV.length < 1
@@ -24,13 +26,29 @@ when "prepare"
 when "config"
   exec "cd #{File.expand_path("../..", __FILE__)} && rake config"
 
+when "stemcells"
+  puts "Building and uploading stemcells to swift..."
+  exec "cd #{File.expand_path("../..", __FILE__)} && rake micro_stemcell"
+  exec "cd #{File.expand_path("../..", __FILE__)} && rake stemcell"
+  exec "cd #{File.expand_path("../..", __FILE__)} && rake upload_stemcells"
+
 when "deploy-bosh"
-  # TODO: key and stemcell arguments
+  # TODO: stemcell arguments
   puts "Deploying BOSH..."
-  exec "cd #{File.expand_path("../..", __FILE__)} && rake micro_bosh_deploy"
+  keyfile = ARGV[1]
+  keyname = ARGV[2] or "bosh-#{Time.now.hash.to_s(16)[-6,6]}"
+  exec "cd #{File.expand_path("../..", __FILE__)} && rake download_stemcells"
+  cmd = "cd #{File.expand_path("../..", __FILE__)} && rake micro_bosh_deploy"
+  cmd << " KEYFILE=#{keyfile}" if keyfile
+  cmd << " KEYNAME=#{keyname}" if keyfile # only if keyfile was specified
+  exec cmd
 
 when "deploy-cf"
   puts "Deploying Cloud Foundry..."
+
+when "ip"
+  require 'turtles'
+  puts Turtles::NamedIP.get_ip(ARGV[1])
 
 else
   puts "Invalid command."
