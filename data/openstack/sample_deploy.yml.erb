@@ -110,7 +110,7 @@ properties:
     password: rootpass
   nfs_server:
     address: <%= nfs_ip %>
-    network: <%= wordpress_ip %>/255.255.255.255
+    network: 172.29.3.0/24
   debian_nfs_server:
     no_root_squash: true
 

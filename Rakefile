@@ -202,6 +202,11 @@ task :sample_deploy => WORK_DIR do
   end
 end
 
+task :sample_delete do
+  sh "bosh -n delete deployment wordpress"
+  sh "bosh -n delete release wordpress"
+end
+
 desc "Delete micro bosh"
 task :micro_bosh_delete do
   cd deploy_dir do
@@ -250,5 +255,5 @@ end
 
 desc "Edit configuration"
 task :config => turtles_config do
-  sh "vi #{config_path}"
+  sh "vi #{turtles_config}"
 end

@@ -1,7 +1,38 @@
 #!/usr/bin/env ruby
-#
 $:.unshift(File.expand_path("../../lib", __FILE__))
 
-require 'turtles'
+def show_usage
+  puts "Usage: turtles <command>"
+  puts
+  puts "Commands:"
+  puts "  prepare"
+  puts "  config"
+  puts "  deploy-bosh"
+  puts "  deploy-cf"
+end
 
-puts Turtles::NamedIP.get_ip(ARGV.first)
+if ARGV.length < 1
+  show_usage
+  exit
+end
+
+case ARGV[0]
+when "prepare"
+  puts "Preparing turtles environment..."
+  exec File.expand_path("../../scripts/prepare.sh", __FILE__)
+
+when "config"
+  exec "cd #{File.expand_path("../..", __FILE__)} && rake config"
+
+when "deploy-bosh"
+  # TODO: key and stemcell arguments
+  puts "Deploying BOSH..."
+  exec "cd #{File.expand_path("../..", __FILE__)} && rake micro_bosh_deploy"
+
+when "deploy-cf"
+  puts "Deploying Cloud Foundry..."
+
+else
+  puts "Invalid command."
+  show_usage
+end
