@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-$:.unshift(File.expand_path("../../lib", __FILE__))
+def fullpath(path); File.expand_path(path, File.realpath(__FILE__)); end
 
 def show_usage
   puts "Usage: turtles <command>"
@@ -21,24 +21,24 @@ end
 case ARGV[0]
 when "prepare"
   puts "Preparing turtles environment..."
-  exec File.expand_path("../../scripts/prepare.sh", __FILE__)
+  exec fullpath("../../scripts/prepare.sh")
 
 when "config"
-  exec "cd #{File.expand_path("../..", __FILE__)} && rake config"
+  exec "cd #{fullpath("../..")} && rake config"
 
 when "stemcells"
   puts "Building and uploading stemcells to swift..."
-  exec "cd #{File.expand_path("../..", __FILE__)} && rake micro_stemcell"
-  exec "cd #{File.expand_path("../..", __FILE__)} && rake stemcell"
-  exec "cd #{File.expand_path("../..", __FILE__)} && rake upload_stemcells"
+  exec "cd #{fullpath("../..")} && rake micro_stemcell"
+  exec "cd #{fullpath("../..")} && rake stemcell"
+  exec "cd #{fullpath("../..")} && rake upload_stemcells"
 
 when "deploy-bosh"
   # TODO: stemcell arguments
   puts "Deploying BOSH..."
   keyfile = ARGV[1]
   keyname = ARGV[2] or "bosh-#{Time.now.hash.to_s(16)[-6,6]}"
-  exec "cd #{File.expand_path("../..", __FILE__)} && rake download_stemcells"
-  cmd = "cd #{File.expand_path("../..", __FILE__)} && rake micro_bosh_deploy"
+  exec "cd #{fullpath("../..")} && rake download_stemcells"
+  cmd = "cd #{fullpath("../..")} && rake micro_bosh_deploy"
   cmd << " KEYFILE=#{keyfile}" if keyfile
   cmd << " KEYNAME=#{keyname}" if keyfile # only if keyfile was specified
   exec cmd
@@ -47,6 +47,7 @@ when "deploy-cf"
   puts "Deploying Cloud Foundry..."
 
 when "ip"
+  $:.unshift(fullpath("../../lib"))
   require 'turtles'
   puts Turtles::NamedIP.get_ip(ARGV[1])
 
