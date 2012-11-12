@@ -28,22 +28,22 @@ when "config"
 
 when "stemcells"
   puts "Building and uploading stemcells to swift..."
-  exec "cd #{fullpath("../..")} && rake micro_stemcell"
-  exec "cd #{fullpath("../..")} && rake stemcell"
-  exec "cd #{fullpath("../..")} && rake upload_stemcells"
+  system "cd #{fullpath("../..")} && rake micro_stemcell"
+  system "cd #{fullpath("../..")} && rake stemcell"
+  system "cd #{fullpath("../..")} && rake upload_stemcells"
 
 when "deploy-bosh"
   # TODO: stemcell arguments
   puts "Deploying BOSH..."
   keyfile = ARGV[1]
   keyname = ARGV[2] or "bosh-#{Time.now.hash.to_s(16)[-6,6]}"
-  exec "cd #{fullpath("../..")} && rake download_stemcells"
+  system "cd #{fullpath("../..")} && rake download_stemcells"
   cmd = "cd #{fullpath("../..")} && rake micro_bosh_deploy"
   if keyfile
     cmd << " KEYFILE=#{keyfile}"
     cmd << " KEYNAME=#{keyname}"
   end
-  exec cmd
+  system cmd
 
 when "deploy-cf"
   puts "Deploying Cloud Foundry..."
