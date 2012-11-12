@@ -39,8 +39,10 @@ when "deploy-bosh"
   keyname = ARGV[2] or "bosh-#{Time.now.hash.to_s(16)[-6,6]}"
   exec "cd #{fullpath("../..")} && rake download_stemcells"
   cmd = "cd #{fullpath("../..")} && rake micro_bosh_deploy"
-  cmd << " KEYFILE=#{keyfile}" if keyfile
-  cmd << " KEYNAME=#{keyname}" if keyfile # only if keyfile was specified
+  if keyfile
+    cmd << " KEYFILE=#{keyfile}"
+    cmd << " KEYNAME=#{keyname}"
+  end
   exec cmd
 
 when "deploy-cf"
