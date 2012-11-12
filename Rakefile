@@ -143,10 +143,11 @@ file turtles_pk => turtles_config do |t|
     keypair.save
     keypair.write(t.name)
   else
-    public_key = File.read(KEYFILE)
-    keypair = Turtles.cloud.key_pairs.new :name => KEYNAME, :public_key => private_key
+    key_file = File.expand_path(KEYFILE)
+    public_key = File.read(key_file)
+    keypair = Turtles.cloud.key_pairs.new :name => KEYNAME, :public_key => public_key
     keypair.save
-    cp KEYFILE, t.name
+    cp key_file, t.name
   end
 end
 
