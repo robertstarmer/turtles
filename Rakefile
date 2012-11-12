@@ -154,7 +154,7 @@ task :micro_bosh_cloud_setup => turtles_config do
       :name => "turtles-bosh-micro",
       :description => "Bosh Micro Stack for Turtles"
     })
-    group.save
+    group.save rescue nil # for some reason this errors out but makes it anyway
     # too many ports to be specific yet
     if Turtles.cloud.class.to_s.include? "OpenStack"
       group.create_security_group_rule(1, 65535)
