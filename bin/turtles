@@ -35,8 +35,8 @@ when "stemcells"
 when "deploy-bosh"
   # TODO: stemcell arguments
   puts "Deploying BOSH..."
-  keyfile = ARGV[1]
-  keyname = ARGV[2] or "bosh-#{Time.now.hash.to_s(16)[-6,6]}"
+  keyfile = ARGV[1].to_s.empty? ? nil : ARGV[1]
+  keyname = ARGV[2].to_s.empty? ? "bosh-#{Time.now.hash.to_s(16)[-6,6]}" : ARGV[2]
   system "cd #{fullpath("../..")} && rake download_stemcells"
   cmd = "cd #{fullpath("../..")} && rake micro_bosh_deploy"
   if keyfile
