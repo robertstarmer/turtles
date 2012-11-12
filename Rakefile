@@ -10,7 +10,7 @@ else
   TURTLES_DIR = File.expand_path("~/turtles")
 end
 
-KEYNAME = ENV['KEYNAME'] or "turtles"
+KEYNAME = ENV['KEYNAME'].to_s.empty? ? "turtles" : ENV['KEYNAME']
 
 def provider; Turtles.config['cloud'][:provider]; end
 
@@ -23,7 +23,7 @@ def work_path(*parts);      File.join(parts.unshift(WORK_DIR)); end
 
 # Paths
 turtles_config            = File.expand_path("~/.turtles")
-turtles_pk                = ENV['KEYFILE'] or work_path('turtles.pem')
+turtles_pk                = ENV['KEYFILE'].to_s.empty? ? work_path('turtles.pem') : ENV['KEYFILE']
 deploy_dir                = work_path('deployments')
 bosh_release              = work_path('bosh-release.tgz')
 bosh_checkout             = work_path('bosh')
