@@ -166,6 +166,8 @@ task :micro_bosh_cloud_setup => turtles_config do
     group.save rescue nil # for some reason this errors out but makes it anyway
     # too many ports to be specific yet
     if Turtles.cloud.class.to_s.include? "OpenStack"
+      groups = Turtles.cloud.security_groups
+      group = groups.find {|g| g.name == "turtles-bosh-micro" }
       group.create_security_group_rule(1, 65535)
     else
       group.authorize_port_range(0..65535)
