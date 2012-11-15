@@ -144,8 +144,10 @@ file turtles_pk => turtles_config do |t|
     keypair.write(t.name)
   else
     key_file = File.expand_path(KEYFILE)
-    public_key = File.read(key_file)
-    keypair = Turtles.cloud.key_pairs.new :name => KEYNAME, :public_key => public_key
+    private_key = File.read(key_file)
+    public_key = `ssh-keygen -f #{key_file} -y`.strip
+    keypair = Turtles.cloud.key_pairs.new({
+      :name => KEYNAME, :public_key => public_key, :private_key => private_key})
     keypair.save
     cp key_file, t.name
   end
