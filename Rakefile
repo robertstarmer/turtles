@@ -219,6 +219,31 @@ task :sample_deploy => WORK_DIR do
   end
 end
 
+desc "Deploy Cloud Foundry"
+task :cf_deploy => WORK_DIR do
+  cd WORK_DIR
+  rm_rf 'cf-release'
+  sh 'git clone git://github.com/cloudfoundry/bosh-sample-release.git'
+  cd 'cf-release' do
+    sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
+    sh './update'
+    sh "bosh -n upload release releases/appcloud-120.yml" 
+    security_group = "turtles-bosh-micro"
+    director_uuid = bosh_uuid
+    nfs_ip = Turtles::NamedIP.get_ip("cf-nsf")
+    router_ip = Turtles::NamedIP.get_ip("cf-router")
+    ccdb_ip = Turtles::NamedIP.get_ip("cf-ccdb")
+    vcap_redis_ip = Turtles::NamedIP.get_ip("cf-vcap-redis")
+    nats_ip = Turtles::NamedIP.get_ip("cf-nats")
+    template = ERB.new(File.read(data_file('cf_deploy.yml.erb', true)))
+    File.open('cf-openstack.yml', 'w') do |f|
+      f.write(template.result(binding))
+    end
+    sh "bosh -n deployment cf-openstack.yml"
+    sh "bosh -n deploy"
+  end
+end
+
 task :sample_delete do
   sh "bosh -n delete deployment wordpress"
   sh "bosh -n delete release wordpress"

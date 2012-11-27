@@ -33,7 +33,6 @@ when "stemcells"
   system "cd #{fullpath("../..")} && rake upload_stemcells"
 
 when "deploy-bosh"
-  # TODO: stemcell arguments
   puts "Deploying BOSH..."
   keyfile = ARGV[1].to_s.empty? ? nil : ARGV[1]
   keyname = ARGV[2].to_s.empty? ? "bosh-#{Time.now.hash.to_s(16)[-6,6]}" : ARGV[2]
