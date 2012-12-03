@@ -10,7 +10,7 @@ else
   TURTLES_DIR = File.expand_path("~/turtles")
 end
 
-KEYNAME = ENV['KEYNAME'].to_s.empty? ? "turtles" : ENV['KEYNAME']
+KEYNAME = ENV['KEYNAME'].to_s.empty? ? "bosh-#{Time.now.hash.to_s(16)[-6,6]}" : ENV['KEYNAME']
 KEYFILE = ENV['KEYFILE'].to_s
 
 def provider; Turtles.config['cloud'][:provider]; end
@@ -223,10 +223,11 @@ desc "Deploy Cloud Foundry"
 task :cf_deploy => WORK_DIR do
   cd WORK_DIR
   rm_rf 'cf-release'
-  sh 'git clone git://github.com/cloudfoundry/bosh-sample-release.git'
+  sh 'git clone git://github.com/cloudfoundry/cf-release.git'
   cd 'cf-release' do
     sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
     sh './update'
+    # it might already exist, but... 
     sh "bosh -n upload release releases/appcloud-120.yml" 
     security_group = "turtles-bosh-micro"
     director_uuid = bosh_uuid
