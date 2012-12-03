@@ -10,7 +10,7 @@ else
   TURTLES_DIR = File.expand_path("~/turtles")
 end
 
-KEYNAME = ENV['KEYNAME'].to_s.empty? ? "bosh-#{Time.now.hash.to_s(16)[-6,6]}" : ENV['KEYNAME']
+KEYNAME = ENV['KEYNAME'].to_s.empty? ? "turtles" : ENV['KEYNAME']
 KEYFILE = ENV['KEYFILE'].to_s
 
 def provider; Turtles.config['cloud'][:provider]; end
