@@ -41,7 +41,7 @@ directory micro_bosh_deploy_dir
 
 def swift(*args, &block)
   auth_url = Turtles.config['cloud'][:openstack_auth_url]
-  admin_key = Turtles.config['cloud'][:openstack_admin_key]
+  admin_key = Turtles.config['cloud_ext'][:openstack_admin_key]
   sh "swift -A #{auth_url} -V 2.0 -U admin:admin -K #{admin_key} #{args.join(' ')}", &block
 end
 
@@ -236,12 +236,28 @@ task :cf_deploy => WORK_DIR do
     ccdb_ip = Turtles::NamedIP.get_ip("cf-ccdb")
     vcap_redis_ip = Turtles::NamedIP.get_ip("cf-vcap-redis")
     nats_ip = Turtles::NamedIP.get_ip("cf-nats")
-    template = ERB.new(File.read(data_file('cf_deploy.yml.erb', true)))
+    network = Turtles.config['cloud_ext'][:network]
+    if ENV['TEMPLATE'].to_s.empty?
+      template_file = data_file('cf_deploy.yml.erb', true)
+    else
+      template_file = ENV['TEMPLATE']
+    end
+    template = ERB.new(File.read(template_file))
     File.open('cf-openstack.yml', 'w') do |f|
       f.write(template.result(binding))
     end
     sh "bosh -n deployment cf-openstack.yml"
-    sh "bosh -n deploy"
+    begin
+      sh "bosh -n delete deployment cloudfoundry"
+      sh "bosh -n deploy" do |ok,res|
+        if !ok
+          2.times do 
+            sh "bosh -n cloudcheck --auto"
+            sh "bosh -n deploy"
+          end
+        end
+      end
+    end while $? != 0
   end
 end
 

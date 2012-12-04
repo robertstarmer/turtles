@@ -6,11 +6,17 @@ def show_usage
   puts
   puts "Commands:"
   puts "  prepare"
+  puts "     Prepares the environment\n"
   puts "  config"
+  puts "     Edits Turtle configuration\n"
   puts "  stemcells"
+  puts "     Builds and uploads stemcells\n"
   puts "  deploy-bosh [keyfile] [keyname]"
-  puts "  deploy-cf"
+  puts "     Deploys a micro BOSH instance\n"
+  puts "  deploy-cf [template]"
+  puts "     Deploys Cloud Foundry using micro BOSH\n"
   puts "  ip <service>"
+  puts "     Returns a fixed floating IP for a name\n"
 end
 
 if ARGV.length < 1
@@ -46,6 +52,12 @@ when "deploy-bosh"
 
 when "deploy-cf"
   puts "Deploying Cloud Foundry..."
+  template = ARGV[1].to_s.empty? ? nil : ARGV[1]
+  cmd = "cd #{fullpath("../..")} && rake cf_deploy"
+  if template
+    cmd << " TEMPLATE=#{template}"
+  end
+  system cmd
 
 when "ip"
   $:.unshift(fullpath("../../lib"))

@@ -34,7 +34,7 @@ networks:
 resource_pools:
 - name: dea
   network: private
-  size: 4
+  size: 2
   stemcell: 
     name: bosh-stemcell
     version: 0.6.7
@@ -45,7 +45,7 @@ resource_pools:
       password: $6$XLI2E4O.Z9$FgtcuRKhGwEhvdFnRnQcb0Qnh7LXnzxTtAKjmB2Fylf3AmQ6TJ.hBKp7b7t0ThXLnFQYQVkFOGJdwSs0erMNY/
 - name: infrastructure
   network: private
-  size: 10
+  size: 8
   stemcell: 
     name: bosh-stemcell
     version: 0.6.7
@@ -69,9 +69,21 @@ jobs:
   - name: public
     static_ips: 
     - <%= nfs_ip %>
+- name: nats
+  template: nats
+  instances: 1
+  resource_pool: infrastructure
+  networks: 
+  - name: private
+    default: 
+    - dns
+    - gateway
+  - name: public
+    static_ips: 
+    - <%= nats_ip %>
 - name: cloud_controller
   template: cloud_controller
-  instances: 2
+  instances: 1
   resource_pool: infrastructure
   networks: 
   - name: private
@@ -80,7 +92,7 @@ jobs:
     - gateway
 - name: dea
   template: dea
-  instances: 4
+  instances: 2
   resource_pool: dea
   networks: 
   - name: private
@@ -142,18 +154,7 @@ jobs:
     default: 
     - dns
     - gateway
-- name: nats
-  template: nats
-  instances: 1
-  resource_pool: infrastructure
-  networks: 
-  - name: private
-    default: 
-    - dns
-    - gateway
-  - name: public
-    static_ips: 
-    - <%= nats_ip %>
+
 
 
 
@@ -179,7 +180,7 @@ properties:
     token: aaaf4eaa8c1758f66d5cb7adcb24adb9d7
     use_nginx: true
     new_stager_percent: 25
-    new_stager_email_regexp: '.*@pistoncloud.com.com'
+    new_stager_email_regexp: '.*@pistoncloud.com'
     staging_upload_user: aaafhgjg
     staging_upload_password: AAAfdase9
     allow_registration: true
@@ -222,7 +223,7 @@ properties:
 
   nfs_server:
     address: <%= nfs_ip %>
-    network: 172.28.3.0/24
+    network: <%= network %>
 
   router:
     status:
