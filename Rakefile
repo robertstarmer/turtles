@@ -248,11 +248,11 @@ task :cf_deploy => WORK_DIR do
     end
     sh "bosh -n deployment cf-openstack.yml"
     begin
-      sh "bosh -n delete deployment cloudfoundry"
+      sh "bosh -n delete deployment cloudfoundry" rescue nil
       sh "bosh -n deploy" do |ok,res|
         if !ok
           2.times do 
-            sh "bosh -n cloudcheck --auto"
+            sh "bosh cloudcheck --auto"
             sh "bosh -n deploy"
           end
         end
