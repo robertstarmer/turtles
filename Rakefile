@@ -45,6 +45,9 @@ def bosh_uuid
 end
 
 def exist(t)
+  # we need to break some of the assumptions of rake.
+  # we use this check to skip tasks while ensuring
+  # the task is attempted to be run again next time
   if File.exist? t.name
     touch t.name
     true
