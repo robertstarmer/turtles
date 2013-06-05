@@ -2,13 +2,8 @@ $:.unshift(File.expand_path("../lib", __FILE__))
 require 'turtles'
 require 'fog'
 
-if ENV['HOME'] == '/Users/progrium'
-  WORK_DIR = "/Users/progrium/Projects/turtles/work"
-  TURTLES_DIR = "/Users/progrium/Projects/turtles/turtles"
-else
-  WORK_DIR = File.expand_path("~/work")
-  TURTLES_DIR = File.expand_path("~/turtles")
-end
+WORK_DIR = File.expand_path("~/work")
+TURTLES_DIR = File.expand_path("~/turtles")
 
 KEYNAME = ENV['KEYNAME'].to_s.empty? ? "turtles" : ENV['KEYNAME']
 KEYFILE = ENV['KEYFILE'].to_s
