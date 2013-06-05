@@ -10,44 +10,44 @@ Using Turtles
 Starting out assumes a fresh OpenStack environment with a single bootstrap VM. Turtles was
 developed assuming an Ubuntu machine. Bootstrapping (inception) would start with these commands:
 
-  apt-get update
-  apt-get install git ruby1.9.1 -y
-  git clone https://github.com/piston/turtles.git
-  ln -s ~/turtles/bin/turtles /usr/local/bin/turtles
-  turtles prepare
+	apt-get update
+	apt-get install git ruby1.9.1 -y
+	git clone https://github.com/piston/turtles.git
+	ln -s ~/turtles/bin/turtles /usr/local/bin/turtles
+	turtles prepare
 
 This installs all dependencies necessary to continue. Before starting, we have to set some
 configuration:
 
-  turtles config
+	turtles config
 
 This will open the configuration file, which will require some changes. In fact, almost all fields.
 The curious one is the admin key, which is used to manage stemcell images in Swift. Speaking of which,
 you can either grab pre-existing stemcells images or generate them. Generating takes several hours, but
 you can start the process of building both stemcells and uploading them to Swift with:
 
-  turtles stemcells
+	turtles stemcells
 
 I'd recommend against this if you can get recent stemcells. They'll need to be placed in Swift at:
 
-  http://swift_server/turtles/bosh-stemcell.tgz
-  http://swift_server/turtles/micro-bosh-stemcell.tgz
+	http://swift_server/turtles/bosh-stemcell.tgz
+	http://swift_server/turtles/micro-bosh-stemcell.tgz
 
 Turtles will expect them to be there before you start deploying:
 
-  turtles deploy-bosh
+	turtles deploy-bosh
 
 This will create a keypair with OpenStack and use it for the rest of the process. There is an option
 to use your own key and keyname by providing them as arguments to `turtles deploy-bosh`. In any case,
 from here it's an autopilot until micro BOSH is running. 
 
-*It should be noted that a full BOSH deployment is not deployed. Only a micro BOSH deployment, since that
-is all that's necessary to get a running Cloud Foundry environment.*
+**It should be noted that a full BOSH deployment is not deployed. Only a micro BOSH deployment, since that
+is all that's necessary to get a running Cloud Foundry environment.**
 
 Once it's finished, it'll run `bosh status` for you, showing you that BOSH is running. You don't need
 this information to continue. From here, just run:
 
-  turtles deploy-cf
+	turtles deploy-cf
 
 This will take even longer. Because of the complexity of this orchestration and the occasional ... instability
 of the OpenStack environment, something might fail. The CF deployment script will try to get around this by
