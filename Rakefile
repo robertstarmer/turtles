@@ -248,7 +248,7 @@ task :cf_deploy => WORK_DIR do
         if !ok
           2.times do 
             sh "bosh cloudcheck --auto"
-            sh "bosh -n deploy"
+            sh "bosh -n deploy" rescue nil
           end
         end
       end
