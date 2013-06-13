@@ -64,6 +64,7 @@ file bosh_release => WORK_DIR do |t|
   rm_rf 'bosh-release'
   sh 'git clone git://github.com/cloudfoundry/bosh-release.git'
   cd 'bosh-release' do
+    sh "git checkout 9e0b649da80a563ba64229069299c57f72ab54ad"
     sh "#{turtles_path('scripts', 'fix_gitmodules.sh')} #{pwd}/.gitmodules"
     sh 'git submodule update --init'
     sh 'git stash'
@@ -85,7 +86,7 @@ end
 file micro_bosh_stemcell => [bosh_checkout, bosh_release, WORK_DIR] do |t|
   next if exist t
   cd WORK_DIR
-  cd 'bosh/agent' do
+  cd 'bosh-release/src/bosh/agent' do
     sh 'bundle install --without=development test'
     manifest = work_path('bosh-release', 'micro', "#{provider}.yml")
     sh "rake stemcell2:micro[#{provider},#{manifest},#{bosh_release}]"
@@ -100,7 +101,7 @@ task :micro_stemcell => micro_bosh_stemcell
 file bosh_stemcell => [bosh_checkout, WORK_DIR] do |t|
   next if exist t
   cd WORK_DIR
-  cd 'bosh/agent' do
+  cd 'bosh-release/src/bosh/agent' do
     sh 'bundle install --without=development test'
     sh "rake stemcell2:basic[#{provider}]"
     stemcell = `find /var/tmp -name bosh-stemcell*`.strip

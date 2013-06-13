@@ -8,3 +8,5 @@ cloud:
 cloud_ext:
   :network: 172.28.3.0/24
   :openstack_admin_key: 
+named_ips:
+  micro-bosh: 172.28.3.10

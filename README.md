@@ -71,6 +71,10 @@ configure BOSH and CF, they must be given static IPs. So IPs are allocated by na
 on the bootstrap machine. This is important to know as it is a peculiar piece of state that could cause 
 problems if not acknowledged. 
 
+The local file is the .turtles file, and you will need to add a section like:
+
+named_ips:
+  micro-bosh: 192.168.241.17
 In reading the code, you may notice that there are some provisions that make it seem to support AWS as well
 as OpenStack. Turtles was originally developed against AWS and then made to run on OpenStack, leaving the AWS
 code in. It might not work. In fact, because of major changes in CF and BOSH, it's possible Turtles has a number
